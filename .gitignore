@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+instance/
+backend/instance/
+*.db
+venv/
+.env
+*.csv
+backend/static/resumes/
+backend/logs/
+*.log
+.pytest_cache/
+celerybeat-schedule*
+backend/celerybeat-schedule*
+frontend/resumes/
+frontend/exports/
