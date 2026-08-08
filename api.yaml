@@ -1,0 +1,357 @@
+openapi: 3.0.3
+info:
+  title: Placement Portal Application (PPA-V2) API
+  description: REST API for Placement Portal Application enabling Admin, Company, and Student workflows.
+  version: 2.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        role:
+          type: string
+          enum: [student, company]
+        full_name:
+          type: string
+        branch:
+          type: string
+        cgpa:
+          type: number
+          minimum: 0
+          maximum: 10
+        year:
+          type: integer
+        company_name:
+          type: string
+        industry:
+          type: string
+        location:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    DriveCreateRequest:
+      type: object
+      required:
+        - job_title
+        - application_deadline
+      properties:
+        job_title:
+          type: string
+        job_description:
+          type: string
+        eligibility_branch:
+          type: string
+        eligibility_cgpa:
+          type: number
+        eligibility_year:
+          type: integer
+        salary:
+          type: string
+        application_deadline:
+          type: string
+          format: date
+
+    ApplicationStatusUpdateRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [shortlisted, interview, offer, placed, rejected]
+        company_feedback:
+          type: string
+        interview_date:
+          type: string
+          format: date-time
+        salary:
+          type: string
+        joining_date:
+          type: string
+          format: date
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new student or company account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Validation error
+
+  /auth/login:
+    post:
+      summary: Log in and receive JWT access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful authentication
+        '401':
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      summary: Retrieve current authenticated user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+        '401':
+          description: Unauthorized
+
+  /auth/stats:
+    get:
+      summary: Public portal statistics summary
+      responses:
+        '200':
+          description: Aggregate statistics for landing page
+
+  /admin/dashboard:
+    get:
+      summary: Retrieve admin KPI counts and summary
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Admin dashboard metrics
+
+  /admin/companies:
+    get:
+      summary: List all companies
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of companies
+
+  /admin/companies/{id}/approve:
+    post:
+      summary: Approve company registration
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Company approved
+
+  /admin/companies/{id}/reject:
+    post:
+      summary: Reject company registration
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Company rejected
+
+  /admin/drives:
+    get:
+      summary: List all placement drives
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of drives
+
+  /admin/drives/{id}/approve:
+    post:
+      summary: Approve placement drive
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Drive approved
+
+  /admin/analytics:
+    get:
+      summary: Get chart analytics data
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Analytics data
+
+  /company/profile:
+    get:
+      summary: Get recruiter company profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Company profile
+    put:
+      summary: Update recruiter company profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Updated company profile
+
+  /company/drives:
+    get:
+      summary: Get drives posted by authenticated company
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of company drives
+    post:
+      summary: Create a new placement drive
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriveCreateRequest'
+      responses:
+        '201':
+          description: Drive created
+
+  /company/drives/{id}/applications:
+    get:
+      summary: Get all applicant profiles for a drive
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of candidates
+
+  /company/applications/{id}/status:
+    post:
+      summary: Transition candidate application status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationStatusUpdateRequest'
+      responses:
+        '200':
+          description: Status updated
+
+  /student/profile:
+    get:
+      summary: Get student profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Student profile
+    put:
+      summary: Update student profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile updated
+
+  /student/drives:
+    get:
+      summary: Browse approved placement drives
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of drives
+
+  /student/drives/{id}/apply:
+    post:
+      summary: Apply to placement drive
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Application submitted
+        '400':
+          description: Ineligible or already applied
+
+  /student/applications:
+    get:
+      summary: View student application history
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Student application list
