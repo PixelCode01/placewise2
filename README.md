@@ -69,8 +69,13 @@ placewise2/
 │   │   ├── reports.py      # Monthly placement activity report task
 │   │   └── exports.py      # User-triggered async CSV export task
 │   └── tests/
-│       ├── conftest.py     # Pytest fixtures
-│       └── test_auth.py    # Authentication flow tests
+│       ├── conftest.py     # Pytest fixtures and mock client
+│       ├── test_admin.py   # Admin management and approval tests
+│       ├── test_ats.py     # ATS resume keyword matching tests
+│       ├── test_auth.py    # Authentication and registration tests
+│       ├── test_company.py # Company drive creation and applicant tests
+│       ├── test_student.py # Student profile and application flow tests
+│       └── test_tasks.py   # Celery reminders and report tasks tests
 └── frontend/
     ├── index.html          # SPA entry point with Bootstrap and fonts
     ├── manifest.json       # PWA manifest for Add to Home Screen
