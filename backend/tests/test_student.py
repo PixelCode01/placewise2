@@ -75,3 +75,47 @@ def test_student_flow(client, app):
     assert my_apps.status_code == 200
     assert len(my_apps.json) == 1
     assert my_apps.json[0]['job_title'] == "Backend Developer"
+
+def test_all_branches_eligibility(client, app):
+    with app.app_context():
+        cu = User(email="allco@hire.com", password_hash=generate_password_hash("pass"), role="company")
+        db.session.add(cu)
+        db.session.flush()
+        c = Company(user_id=cu.id, name="AllBranchCo", approval_status="approved")
+        db.session.add(c)
+        db.session.flush()
+        
+        d = PlacementDrive(
+            company_id=c.id,
+            job_title="General Trainee",
+            job_description="Open to all branches",
+            salary="6 LPA",
+            application_deadline=date.today() + timedelta(days=5),
+            eligibility_branch="All Branches",
+            eligibility_cgpa=6.0,
+            eligibility_year=4,
+            status="approved"
+        )
+        db.session.add(d)
+
+        su = User(email="mech@hire.com", password_hash=generate_password_hash("pass123"), role="student")
+        db.session.add(su)
+        db.session.flush()
+        s = Student(user_id=su.id, full_name="Mechanical Student", branch="Mechanical Engineering", cgpa=7.5, year=4)
+        db.session.add(s)
+        db.session.commit()
+
+        d_id = d.id
+
+    login_res = client.post('/api/auth/login', json={"email": "mech@hire.com", "password": "pass123"})
+    token = login_res.json['access_token']
+    headers = {'Authorization': f'Bearer {token}'}
+
+    drives_res = client.get('/api/student/drives', headers=headers)
+    assert drives_res.status_code == 200
+    all_drive = next(x for x in drives_res.json if x['id'] == d_id)
+    assert all_drive['eligible'] is True
+
+    app_res = client.post(f'/api/student/drives/{d_id}/apply', headers=headers)
+    assert app_res.status_code == 201
+

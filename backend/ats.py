@@ -27,11 +27,13 @@ def run_ats_check(student, drive):
         eligibility_ok = False
         eligibility_notes.append(f'CGPA below minimum ({drive.eligibility_cgpa})')
     if drive.eligibility_branch:
-        allowed = [b.strip().lower() for b in drive.eligibility_branch.split(',') if b.strip()]
-        student_b = (student.branch or '').strip().lower()
-        if not student_b or student_b not in allowed:
-            eligibility_ok = False
-            eligibility_notes.append(f'Branch not in allowed list ({drive.eligibility_branch})')
+        branch_str = drive.eligibility_branch.strip()
+        if 'all' not in branch_str.lower() and 'any' not in branch_str.lower():
+            allowed = [b.strip().lower() for b in branch_str.split(',') if b.strip()]
+            student_b = (student.branch or '').strip().lower()
+            if not student_b or student_b not in allowed:
+                eligibility_ok = False
+                eligibility_notes.append(f'Branch not in allowed list ({drive.eligibility_branch})')
     if drive.eligibility_year and (student.year is None or student.year != drive.eligibility_year):
         eligibility_ok = False
         eligibility_notes.append(f'Year requirement not met (Target: Year {drive.eligibility_year})')

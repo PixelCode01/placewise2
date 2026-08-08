@@ -123,12 +123,15 @@ def check_eligibility(student, drive):
     if drive.eligibility_cgpa and (not student.cgpa or student.cgpa < drive.eligibility_cgpa):
         reasons.append(f'Min CGPA {drive.eligibility_cgpa} required (yours: {student.cgpa or "not set"})')
     if drive.eligibility_branch:
-        if not student.branch:
-            reasons.append(f'Branch not set on your profile (required: {drive.eligibility_branch})')
-        else:
-            allowed = [b.strip() for b in drive.eligibility_branch.split(',')]
-            if student.branch not in allowed:
-                reasons.append(f'Branch must be one of: {drive.eligibility_branch}')
+        branch_str = drive.eligibility_branch.strip()
+        if 'all' not in branch_str.lower() and 'any' not in branch_str.lower():
+            if not student.branch:
+                reasons.append(f'Branch not set on your profile (required: {drive.eligibility_branch})')
+            else:
+                allowed = [b.strip().lower() for b in branch_str.split(',') if b.strip()]
+                student_branch = student.branch.strip().lower()
+                if student_branch not in allowed:
+                    reasons.append(f'Branch must be one of: {drive.eligibility_branch}')
     if drive.eligibility_year and student.year and student.year != drive.eligibility_year:
         reasons.append(f'Year {drive.eligibility_year} required (yours: {student.year})')
     return len(reasons) == 0, reasons
@@ -138,12 +141,15 @@ def check_eligibility_from_dict(student, d):
     if d.get('eligibility_cgpa') and (not student.cgpa or student.cgpa < d['eligibility_cgpa']):
         reasons.append(f'Min CGPA {d["eligibility_cgpa"]} required (yours: {student.cgpa or "not set"})')
     if d.get('eligibility_branch'):
-        if not student.branch:
-            reasons.append(f'Branch not set on your profile (required: {d["eligibility_branch"]})')
-        else:
-            allowed = [b.strip() for b in d['eligibility_branch'].split(',')]
-            if student.branch not in allowed:
-                reasons.append(f'Branch must be one of: {d["eligibility_branch"]}')
+        branch_str = d['eligibility_branch'].strip()
+        if 'all' not in branch_str.lower() and 'any' not in branch_str.lower():
+            if not student.branch:
+                reasons.append(f'Branch not set on your profile (required: {d["eligibility_branch"]})')
+            else:
+                allowed = [b.strip().lower() for b in branch_str.split(',') if b.strip()]
+                student_branch = (student.branch or '').strip().lower()
+                if student_branch not in allowed:
+                    reasons.append(f'Branch must be one of: {d["eligibility_branch"]}')
     if d.get('eligibility_year') and student.year and student.year != d['eligibility_year']:
         reasons.append(f'Year {d["eligibility_year"]} required (yours: {student.year})')
     return len(reasons) == 0, reasons

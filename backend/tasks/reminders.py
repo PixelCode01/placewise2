@@ -92,10 +92,12 @@ def is_eligible(student, drive):
     if drive.eligibility_cgpa and (student.cgpa is None or student.cgpa < drive.eligibility_cgpa):
         return False, []
     if drive.eligibility_branch:
-        allowed = [b.strip().lower() for b in drive.eligibility_branch.split(',') if b.strip()]
-        student_b = (student.branch or '').strip().lower()
-        if not student_b or student_b not in allowed:
-            return False, []
+        branch_str = drive.eligibility_branch.strip()
+        if 'all' not in branch_str.lower() and 'any' not in branch_str.lower():
+            allowed = [b.strip().lower() for b in branch_str.split(',') if b.strip()]
+            student_b = (student.branch or '').strip().lower()
+            if not student_b or student_b not in allowed:
+                return False, []
     if drive.eligibility_year and (student.year is None or student.year != drive.eligibility_year):
         return False, []
     return True, []
